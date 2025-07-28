@@ -127,9 +127,9 @@ clearBtn.MouseButton1Click:Connect(function()
 end)
 
 testBtn.MouseButton1Click:Connect(function()
-    -- Chama as funções manualmente para teste
+    local rootPart = character:FindFirstChild("HumanoidRootPart")
     humanoid:TakeDamage(10)
-    humanoid:MoveTo(humanoid.RootPart and humanoid.RootPart.Position + Vector3.new(5,0,0) or Vector3.new(0,0,0))
+    humanoid:MoveTo(rootPart and rootPart.Position + Vector3.new(5,0,0) or Vector3.new(0,0,0))
     humanoid.Jump = true
 end)
 
