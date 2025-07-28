@@ -1,24 +1,36 @@
--- ✅ CONFIGURAÇÕES: Ative ou desative recursos
-local autoTrain = true
-local autoPrestige = true
-local autoFood = true
+getgenv().autoTrain = true
+getgenv().autoPrestige = true
+getgenv().autoFood = true
 
--- ⏱️ Ajuste de velocidade (quanto menor, mais rápido — cuidado!)
-local trainDelay = 0.01
-local prestigeDelay = 3
-local foodDelay = 1
+spawn(function()
+    while getgenv().autoTrain do
+        local success, err = pcall(function()
+            local player = game.Players.LocalPlayer
+            local data = require(workspace.Src.C).Gen(player)
+            game.ReplicatedStorage.WorkoutHandler_TriggerWorkoutGain:FireServer(data)
+        end)
+        task.wait(0.01)
+    end
+end)
 
--- 🧩 Referências básicas
-local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local LocalPlayer = Players.LocalPlayer
-local RunService = game:GetService("RunService")
+spawn(function()
+    while getgenv().autoPrestige do
+        pcall(function()
+            game.ReplicatedStorage.WorkoutHandler_Prestige:FireServer()
+        end)
+        task.wait(3)
+    end
+end)
 
--- 🔁 Função Auto Train
-local function train()
-    local success, result = pcall(function()
-        local workoutModule = require(workspace.Src.C)
-        local workoutData = workoutModule.Gen(LocalPlayer)
-        ReplicatedStorage.WorkoutHandler_TriggerWorkoutGain:FireServer(workoutData)
-    end)
-    if not success then
+spawn(function()
+    while getgenv().autoFood do
+        for _,v in pairs(workspace:GetDescendants()) do
+            if v:IsA("ProximityPrompt") and v.Name:lower():find("food") then
+                pcall(function()
+                    fireproximityprompt(v)
+                end)
+            end
+        end
+        task.wait(1)
+    end
+end)
