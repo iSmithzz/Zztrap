@@ -1,159 +1,61 @@
 -- Variáveis globais
 getgenv().autoTrain = false
-getgenv().autoPrestige = false
-getgenv().autoFood = false
-getgenv().staminaLock1 = false
-getgenv().staminaLock2 = false
-getgenv().trainDelay = 0.01 -- delay fixo
+getgenv().trainDelay = 0.01
 
--- GUI
+-- Interface básica
 local gui = Instance.new("ScreenGui", game.CoreGui)
-gui.Name = "iSmithzTrain"
+gui.Name = "iSmithzTrainCop"
 
 local frame = Instance.new("Frame", gui)
-frame.Size = UDim2.new(0, 230, 0, 300) -- Aumentado para caber todos os botões
+frame.Size = UDim2.new(0, 180, 0, 70)
 frame.Position = UDim2.new(0, 100, 0, 100)
 frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 frame.BorderSizePixel = 0
 
 local title = Instance.new("TextLabel", frame)
 title.Size = UDim2.new(1, 0, 0, 30)
-title.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-title.Text = "iSmithz Train"
+title.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+title.Text = "iSmithz Train Cop"
 title.TextColor3 = Color3.new(1, 1, 1)
 title.Font = Enum.Font.GothamBold
-title.TextSize = 18
+title.TextSize = 16
 
--- Função para criar botões ON/OFF
-local function createToggle(y, label, variableName)
-	local text = Instance.new("TextLabel", frame)
-	text.Position = UDim2.new(0, 10, 0, y)
-	text.Size = UDim2.new(0, 100, 0, 30)
-	text.BackgroundTransparency = 1
-	text.Text = label
-	text.TextColor3 = Color3.new(1, 1, 1)
-	text.Font = Enum.Font.Gotham
-	text.TextSize = 14
+local toggleButton = Instance.new("TextButton", frame)
+toggleButton.Position = UDim2.new(0, 20, 0, 35)
+toggleButton.Size = UDim2.new(0, 140, 0, 25)
+toggleButton.BackgroundColor3 = Color3.fromRGB(150, 50, 50)
+toggleButton.TextColor3 = Color3.new(1, 1, 1)
+toggleButton.Font = Enum.Font.Gotham
+toggleButton.TextSize = 14
+toggleButton.Text = "Start Auto Train"
 
-	local button = Instance.new("TextButton", frame)
-	button.Position = UDim2.new(0, 120, 0, y)
-	button.Size = UDim2.new(0, 90, 0, 30)
-	button.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
-	button.TextColor3 = Color3.new(1, 1, 1)
-	button.Font = Enum.Font.Gotham
-	button.TextSize = 14
-	button.Text = "OFF"
-
-	button.MouseButton1Click:Connect(function()
-		getgenv()[variableName] = not getgenv()[variableName]
-		button.Text = getgenv()[variableName] and "ON" or "OFF"
-		button.BackgroundColor3 = getgenv()[variableName] and Color3.fromRGB(50, 150, 50) or Color3.fromRGB(150, 50, 50)
-	end)
-end
-
--- Criando botões
-createToggle(40, "Auto Train", "autoTrain")
-createToggle(80, "Auto Prestige", "autoPrestige")
-createToggle(120, "Auto Food", "autoFood")
-createToggle(160, "Stamina Lock 1", "staminaLock1")
-createToggle(200, "Stamina Lock 2", "staminaLock2")
-
--- Auto Train com coroutine reiniciável usando fórmula do PrisonPump
-local trainCoroutine
-local function startAutoTrain()
-	trainCoroutine = coroutine.create(function()
-		while true do
-			if getgenv().autoTrain then
-				local success, result = pcall(function()
-					local ReplicatedStorage = game:GetService("ReplicatedStorage")
-					local WorkoutHandler = ReplicatedStorage:WaitForChild("WorkoutHandler_TriggerWorkoutGain")
-					local player = game.Players.LocalPlayer
-					local gen = require(workspace:WaitForChild("Src"):WaitForChild("C")).Gen
-					WorkoutHandler:FireServer(gen(player))
-				end)
-				if not success then warn("[AutoTrain Error]:", result) end
-			end
-			task.wait(getgenv().trainDelay)
-		end
-	end)
-	coroutine.resume(trainCoroutine)
-end
-
--- Monitora toggle para reiniciar Auto Train coroutine
-spawn(function()
-	local lastState = getgenv().autoTrain
-	while true do
-		if getgenv().autoTrain ~= lastState then
-			lastState = getgenv().autoTrain
-			if lastState then
-				startAutoTrain()
-			end
-		end
-		task.wait(0.5)
+toggleButton.MouseButton1Click:Connect(function()
+	getgenv().autoTrain = not getgenv().autoTrain
+	if getgenv().autoTrain then
+		toggleButton.Text = "Stop Auto Train"
+		toggleButton.BackgroundColor3 = Color3.fromRGB(50, 150, 50)
+	else
+		toggleButton.Text = "Start Auto Train"
+		toggleButton.BackgroundColor3 = Color3.fromRGB(150, 50, 50)
 	end
 end)
 
--- Auto Prestige loop
+-- Script Auto Train baseado no PrisonPump
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Player = game.Players.LocalPlayer
+local WorkoutHandler = ReplicatedStorage:WaitForChild("WorkoutHandler_TriggerWorkoutGain")
+local gen = require(workspace:WaitForChild("Src"):WaitForChild("C")).Gen
+
 task.spawn(function()
 	while true do
-		if getgenv().autoPrestige then
-			pcall(function()
-				game.ReplicatedStorage:WaitForChild("WorkoutHandler_Prestige"):FireServer()
+		if getgenv().autoTrain then
+			local success, err = pcall(function()
+				WorkoutHandler:FireServer(gen(Player))
 			end)
-		end
-		task.wait(3)
-	end
-end)
-
--- Auto Food loop
-task.spawn(function()
-	while true do
-		if getgenv().autoFood then
-			for _, v in pairs(workspace:GetDescendants()) do
-				if v:IsA("ProximityPrompt") and v.Name:lower():find("food") then
-					pcall(function()
-						fireproximityprompt(v)
-					end)
-				end
+			if not success then
+				warn("Erro no Auto Train:", err)
 			end
 		end
-		task.wait(1)
-	end
-end)
-
--- Stamina Lock 1: Setar atributo e valor Stamina no Humanoid
-task.spawn(function()
-	while true do
-		if getgenv().staminaLock1 then
-			local player = game.Players.LocalPlayer
-			if player and player.Character then
-				local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
-				if humanoid then
-					if humanoid:GetAttribute("Stamina") then
-						humanoid:SetAttribute("Stamina", 100)
-					end
-					if humanoid:FindFirstChild("Stamina") and humanoid.Stamina:IsA("NumberValue") then
-						humanoid.Stamina.Value = 100
-					end
-				end
-			end
-		end
-		task.wait(0.1)
-	end
-end)
-
--- Stamina Lock 2: Setar stamina direto no personagem
-task.spawn(function()
-	while true do
-		if getgenv().staminaLock2 then
-			local player = game.Players.LocalPlayer
-			if player and player.Character then
-				local stamina = player.Character:FindFirstChild("Stamina")
-				if stamina and stamina:IsA("NumberValue") then
-					stamina.Value = stamina.MaxValue or 100
-				end
-			end
-		end
-		task.wait(0.1)
+		task.wait(getgenv().trainDelay)
 	end
 end)
