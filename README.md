@@ -2,6 +2,7 @@
 getgenv().autoTrain = false
 getgenv().autoPrestige = false
 getgenv().autoFood = false
+getgenv().staminaLock = false
 getgenv().trainDelay = 0.01 -- delay fixo
 
 -- GUI
@@ -9,7 +10,7 @@ local gui = Instance.new("ScreenGui", game.CoreGui)
 gui.Name = "iSmithzTrain"
 
 local frame = Instance.new("Frame", gui)
-frame.Size = UDim2.new(0, 230, 0, 200)
+frame.Size = UDim2.new(0, 230, 0, 240)
 frame.Position = UDim2.new(0, 100, 0, 100)
 frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 frame.BorderSizePixel = 0
@@ -53,6 +54,7 @@ end
 createToggle(40, "Auto Train", "autoTrain")
 createToggle(80, "Auto Prestige", "autoPrestige")
 createToggle(120, "Auto Food", "autoFood")
+createToggle(160, "Stamina Lock", "staminaLock")
 
 -- Auto Train com coroutine reiniciável usando fórmula do PrisonPump
 local trainCoroutine
@@ -114,5 +116,21 @@ task.spawn(function()
 			end
 		end
 		task.wait(1)
+	end
+end)
+
+-- Stamina Lock loop
+task.spawn(function()
+	while true do
+		if getgenv().staminaLock then
+			local player = game.Players.LocalPlayer
+			if player and player.Character then
+				local stamina = player.Character:FindFirstChild("Stamina")
+				if stamina and stamina:IsA("NumberValue") then
+					stamina.Value = stamina.MaxValue or 100
+				end
+			end
+		end
+		task.wait(0.1)
 	end
 end)
