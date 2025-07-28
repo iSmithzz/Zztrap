@@ -2,14 +2,14 @@
 getgenv().autoTrain = false
 getgenv().autoPrestige = false
 getgenv().autoFood = false
-getgenv().trainDelay = 0.01
+getgenv().trainDelay = 0.01 -- delay fixo
 
 -- GUI
 local gui = Instance.new("ScreenGui", game.CoreGui)
 gui.Name = "iSmithzTrain"
 
 local frame = Instance.new("Frame", gui)
-frame.Size = UDim2.new(0, 230, 0, 250)
+frame.Size = UDim2.new(0, 230, 0, 200)
 frame.Position = UDim2.new(0, 100, 0, 100)
 frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 frame.BorderSizePixel = 0
@@ -53,44 +53,6 @@ end
 createToggle(40, "Auto Train", "autoTrain")
 createToggle(80, "Auto Prestige", "autoPrestige")
 createToggle(120, "Auto Food", "autoFood")
-
--- Controle de velocidade
-local speedLabel = Instance.new("TextLabel", frame)
-speedLabel.Position = UDim2.new(0, 10, 0, 160)
-speedLabel.Size = UDim2.new(1, -20, 0, 20)
-speedLabel.Text = "Train Speed: " .. tostring(getgenv().trainDelay)
-speedLabel.TextColor3 = Color3.new(1, 1, 1)
-speedLabel.BackgroundTransparency = 1
-speedLabel.Font = Enum.Font.Gotham
-speedLabel.TextSize = 14
-
-local plus = Instance.new("TextButton", frame)
-plus.Position = UDim2.new(0, 10, 0, 190)
-plus.Size = UDim2.new(0, 40, 0, 25)
-plus.Text = "+"
-plus.Font = Enum.Font.Gotham
-plus.TextSize = 18
-plus.BackgroundColor3 = Color3.fromRGB(50, 120, 50)
-plus.TextColor3 = Color3.new(1, 1, 1)
-
-local minus = Instance.new("TextButton", frame)
-minus.Position = UDim2.new(0, 60, 0, 190)
-minus.Size = UDim2.new(0, 40, 0, 25)
-minus.Text = "-"
-minus.Font = Enum.Font.Gotham
-minus.TextSize = 18
-minus.BackgroundColor3 = Color3.fromRGB(120, 50, 50)
-minus.TextColor3 = Color3.new(1, 1, 1)
-
-plus.MouseButton1Click:Connect(function()
-	getgenv().trainDelay = math.max(0.001, getgenv().trainDelay - 0.005)
-	speedLabel.Text = "Train Speed: " .. string.format("%.3f", getgenv().trainDelay)
-end)
-
-minus.MouseButton1Click:Connect(function()
-	getgenv().trainDelay = getgenv().trainDelay + 0.005
-	speedLabel.Text = "Train Speed: " .. string.format("%.3f", getgenv().trainDelay)
-end)
 
 -- Auto Train com coroutine reiniciável usando fórmula do PrisonPump
 local trainCoroutine
