@@ -1,71 +1,87 @@
 local player = game.Players.LocalPlayer
 local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
-gui.Name = "FuncAbsorverGui"
+gui.Name = "FuncInspector"
 
-local btn = Instance.new("TextButton", gui)
-btn.Size = UDim2.new(0, 80, 0, 30)
-btn.Position = UDim2.new(1, -90, 0, 10)
-btn.Text = "Mostrar Função"
-btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-btn.TextColor3 = Color3.new(1, 1, 1)
-btn.Font = Enum.Font.SourceSans
-btn.TextSize = 14
+-- Botão pequeno para abrir a janela
+local openBtn = Instance.new("TextButton", gui)
+openBtn.Size = UDim2.new(0, 100, 0, 30)
+openBtn.Position = UDim2.new(1, -110, 0, 10)
+openBtn.Text = "Inspecionar"
+openBtn.BackgroundColor3 = Color3.fromRGB(50,50,50)
+openBtn.TextColor3 = Color3.new(1,1,1)
+openBtn.Font = Enum.Font.SourceSansBold
+openBtn.TextSize = 14
 
+-- Janela para mostrar dados
 local frame = Instance.new("Frame", gui)
-frame.Size = UDim2.new(0, 300, 0, 200)
-frame.Position = UDim2.new(1, -310, 0, 50)
-frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+frame.Size = UDim2.new(0, 350, 0, 250)
+frame.Position = UDim2.new(1, -360, 0, 50)
+frame.BackgroundColor3 = Color3.fromRGB(20,20,20)
 frame.Visible = false
 
+-- Botão fechar
 local closeBtn = Instance.new("TextButton", frame)
 closeBtn.Size = UDim2.new(0, 30, 0, 30)
 closeBtn.Position = UDim2.new(1, -35, 0, 5)
 closeBtn.Text = "X"
-closeBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
-closeBtn.TextColor3 = Color3.new(1, 1, 1)
+closeBtn.BackgroundColor3 = Color3.fromRGB(180,50,50)
+closeBtn.TextColor3 = Color3.new(1,1,1)
 closeBtn.Font = Enum.Font.SourceSansBold
 closeBtn.TextSize = 18
 
-local textBox = Instance.new("TextBox", frame)
-textBox.Size = UDim2.new(1, -10, 1, -40)
-textBox.Position = UDim2.new(0, 5, 0, 35)
-textBox.Text = ""
-textBox.ClearTextOnFocus = false
-textBox.MultiLine = true
-textBox.TextWrapped = true
-textBox.TextXAlignment = Enum.TextXAlignment.Left
-textBox.TextYAlignment = Enum.TextYAlignment.Top
-textBox.Font = Enum.Font.Code
-textBox.TextSize = 12
-textBox.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
-textBox.TextColor3 = Color3.new(1, 1, 1)
-textBox.ReadOnly = true
+-- Caixa de texto para exibir infos
+local infoBox = Instance.new("TextBox", frame)
+infoBox.Size = UDim2.new(1, -10, 1, -40)
+infoBox.Position = UDim2.new(0, 5, 0, 35)
+infoBox.MultiLine = true
+infoBox.ClearTextOnFocus = false
+infoBox.TextWrapped = true
+infoBox.TextXAlignment = Enum.TextXAlignment.Left
+infoBox.TextYAlignment = Enum.TextYAlignment.Top
+infoBox.Font = Enum.Font.Code
+infoBox.TextSize = 12
+infoBox.BackgroundColor3 = Color3.fromRGB(10,10,10)
+infoBox.TextColor3 = Color3.new(1,1,1)
+infoBox.ReadOnly = true
 
--- Função para exibir o bytecode em hex
-local function mostrarFunc(func)
+-- Função para inspecionar
+local function inspecionarFunc(func)
     if typeof(func) ~= "function" then
-        textBox.Text = "Erro: Não é uma função"
+        infoBox.Text = "Erro: O argumento não é uma função."
         return
     end
-    local ok, dumped = pcall(string.dump, func)
-    if not ok then
-        textBox.Text = "Não foi possível obter o bytecode"
-        return
+
+    local info = debug.getinfo(func)
+    local dumpOk, dumpData = pcall(string.dump, func)
+
+    local texto = {}
+    table.insert(texto, ("Nome da função: %s"):format(info.name or "desconhecido"))
+    table.insert(texto, ("Origem: %s"):format(info.source or "desconhecido"))
+    table.insert(texto, ("Definida na linha: %d"):format(info.linedefined or 0))
+    table.insert(texto, ("Última linha: %d"):format(info.lastlinedefined or 0))
+    table.insert(texto, "")
+
+    if dumpOk then
+        local hexDump = dumpData:gsub('.', function(c)
+            return string.format('%02X ', string.byte(c))
+        end)
+        table.insert(texto, "Bytecode (hex):")
+        table.insert(texto, hexDump)
+    else
+        table.insert(texto, "Não foi possível obter o bytecode.")
     end
-    local hex = dumped:gsub('.', function(c)
-        return string.format('%02X ', string.byte(c))
-    end)
-    textBox.Text = hex
+
+    infoBox.Text = table.concat(texto, "\n")
 end
 
--- Função exemplo para testar
-local function teste()
-    print("Função teste")
+-- Exemplo para testar
+local function exemplo()
+    print("Função de exemplo")
 end
 
-btn.MouseButton1Click:Connect(function()
+openBtn.MouseButton1Click:Connect(function()
     frame.Visible = true
-    mostrarFunc(teste)
+    inspecionarFunc(exemplo)
 end)
 
 closeBtn.MouseButton1Click:Connect(function()
