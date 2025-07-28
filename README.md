@@ -92,31 +92,35 @@ minus.MouseButton1Click:Connect(function()
 	speedLabel.Text = "Train Speed: " .. string.format("%.3f", getgenv().trainDelay)
 end)
 
--- Loops principais
+-- Loop Auto Train (com persistência total)
 task.spawn(function()
 	while true do
 		if getgenv().autoTrain then
-			pcall(function()
+			local success, result = pcall(function()
 				local plr = game.Players.LocalPlayer
-				local data = require(workspace.Src.C).Gen(plr)
-				game.ReplicatedStorage.WorkoutHandler_TriggerWorkoutGain:FireServer(data)
+				local genFunc = require(workspace:WaitForChild("Src"):WaitForChild("C")).Gen
+				local data = genFunc(plr)
+				game.ReplicatedStorage:WaitForChild("WorkoutHandler_TriggerWorkoutGain"):FireServer(data)
 			end)
+			if not success then warn("[AutoTrain Error]:", result) end
 		end
 		task.wait(getgenv().trainDelay)
 	end
 end)
 
+-- Loop Auto Prestige
 task.spawn(function()
 	while true do
 		if getgenv().autoPrestige then
 			pcall(function()
-				game.ReplicatedStorage.WorkoutHandler_Prestige:FireServer()
+				game.ReplicatedStorage:WaitForChild("WorkoutHandler_Prestige"):FireServer()
 			end)
 		end
 		task.wait(3)
 	end
 end)
 
+-- Loop Auto Food
 task.spawn(function()
 	while true do
 		if getgenv().autoFood then
