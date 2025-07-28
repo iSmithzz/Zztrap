@@ -17,7 +17,7 @@ toggleBtn.TextSize = 14
 
 -- Janela principal
 local frame = Instance.new("Frame", gui)
-frame.Size = UDim2.new(0, 400, 0, 300)
+frame.Size = UDim2.new(0, 400, 0, 350)
 frame.Position = UDim2.new(1, -410, 0, 50)
 frame.BackgroundColor3 = Color3.fromRGB(20,20,20)
 frame.Visible = false
@@ -42,6 +42,16 @@ clearBtn.TextColor3 = Color3.new(1,1,1)
 clearBtn.Font = Enum.Font.SourceSansBold
 clearBtn.TextSize = 14
 
+-- Botão de teste para chamar as funções manualmente
+local testBtn = Instance.new("TextButton", frame)
+testBtn.Size = UDim2.new(0, 80, 0, 30)
+testBtn.Position = UDim2.new(0, 75, 0, 5)
+testBtn.Text = "Testar"
+testBtn.BackgroundColor3 = Color3.fromRGB(50,50,150)
+testBtn.TextColor3 = Color3.new(1,1,1)
+testBtn.Font = Enum.Font.SourceSansBold
+testBtn.TextSize = 14
+
 -- Container com barra de rolagem
 local scroll = Instance.new("ScrollingFrame", frame)
 scroll.Size = UDim2.new(1, -10, 1, -45)
@@ -52,12 +62,12 @@ scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
 scroll.ScrollBarThickness = 8
 
 local logLabel = Instance.new("TextLabel", scroll)
-logLabel.Size = UDim2.new(1, -10, 0, 0) -- altura dinâmica
+logLabel.Size = UDim2.new(1, -10, 0, 0)
 logLabel.Position = UDim2.new(0, 5, 0, 0)
 logLabel.BackgroundTransparency = 1
 logLabel.TextColor3 = Color3.new(1,1,1)
 logLabel.Font = Enum.Font.Code
-logLabel.TextSize = 12
+logLabel.TextSize = 14
 logLabel.TextXAlignment = Enum.TextXAlignment.Left
 logLabel.TextYAlignment = Enum.TextYAlignment.Top
 logLabel.TextWrapped = true
@@ -75,9 +85,10 @@ end
 local function addLog(line)
     logText = logText .. line .. "\n"
     updateLog(logText)
+    print(line) -- Também imprime no console para garantir
 end
 
--- Sobrescreve e monitora as funções do humanoid
+-- Sobrescrevendo funções com prints + log
 
 -- TakeDamage
 local originalTakeDamage = humanoid.TakeDamage
@@ -93,14 +104,7 @@ humanoid.MoveTo = function(self, position)
     return originalMoveTo(self, position)
 end
 
--- Jump
-local originalJump = humanoid.Jump
-humanoid.Jump = false -- garante que seja bool inicialmente
-local jumpMeta = getmetatable(humanoid)
-local jumpIndex = jumpMeta.__index
-
--- Monitorar mudança de Jump (quando pular)
--- Como Jump é uma propriedade, vamos usar Changed
+-- Jump - Detecta via Changed
 humanoid.Changed:Connect(function(prop)
     if prop == "Jump" and humanoid.Jump == true then
         addLog("Jump chamado")
@@ -122,6 +126,13 @@ clearBtn.MouseButton1Click:Connect(function()
     updateLog(logText)
 end)
 
+testBtn.MouseButton1Click:Connect(function()
+    -- Chama as funções manualmente para teste
+    humanoid:TakeDamage(10)
+    humanoid:MoveTo(humanoid.RootPart and humanoid.RootPart.Position + Vector3.new(5,0,0) or Vector3.new(0,0,0))
+    humanoid.Jump = true
+end)
+
 -- Mensagem inicial
-logText = "Monitorando funções: TakeDamage, MoveTo e Jump\nAbra a janela para ver os logs.\n"
+logText = "Monitorando funções: TakeDamage, MoveTo e Jump\nUse o botão 'Testar' para disparar chamadas.\nAbra a janela para ver os logs.\n"
 updateLog(logText)
