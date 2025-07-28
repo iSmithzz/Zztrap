@@ -1,4 +1,4 @@
-local player = game.Players.LocalPlayer
+[local player = game.Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 local humanoid = character:WaitForChild("Humanoid")
 
@@ -138,3 +138,4 @@ end)
 
 logText = "Monitorando funções: alteração de Health, MoveTo e Jump\nUse o botão 'Testar' para disparar chamadas.\nAbra a janela para ver os logs.\n"
 updateLog(logText)
+](https://pandadevelopment.net/virtual/file/0993d66ebdbf54ae)
