@@ -1,29 +1,21 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
--- Verifica se Models existe
-local ModelsFolder = ReplicatedStorage:WaitForChild("Models", 5)
+local ModelsFolder = ReplicatedStorage:WaitForChild("Models", 10)
 if not ModelsFolder then
     warn("Pasta Models não encontrada em ReplicatedStorage")
     return
 end
 
-local CharacterModels = ModelsFolder:WaitForChild("CharacterModels", 5)
+local CharacterModels = ModelsFolder:WaitForChild("CharacterModels", 10)
 if not CharacterModels then
     warn("Pasta CharacterModels não encontrada em Models")
     return
 end
 
 local screenGui = script.Parent
-local templateLabel = screenGui:FindFirstChild("TemplateLabel")
-
-if not templateLabel then
-    warn("TemplateLabel não encontrado na GUI")
-    return
-end
-
+local templateLabel = screenGui:WaitForChild("TemplateLabel", 5)
 templateLabel.Visible = false
 
--- Cria UIListLayout se não existir
 local UIListLayout = screenGui:FindFirstChildOfClass("UIListLayout")
 if not UIListLayout then
     UIListLayout = Instance.new("UIListLayout")
@@ -55,7 +47,6 @@ local function createCharacterLine(characterModel)
 end
 
 local function refreshList()
-    -- Remove linhas antigas
     for _, child in pairs(screenGui:GetChildren()) do
         if child:IsA("TextLabel") and child ~= templateLabel then
             child:Destroy()
