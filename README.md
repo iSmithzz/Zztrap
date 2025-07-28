@@ -1,16 +1,17 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local CharacterModels = ReplicatedStorage:WaitForChild("Models"):WaitForChild("CharacterModels")
-local Players = game:GetService("Players")
-local player = Players.LocalPlayer
 
 local screenGui = script.Parent
-local templateLabel = screenGui:WaitForChild("TextLabel") -- modelo de linha
+local templateLabel = screenGui:WaitForChild("TemplateLabel")
 templateLabel.Visible = false
 
-local UIListLayout = Instance.new("UIListLayout")
-UIListLayout.Parent = screenGui
-UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-UIListLayout.Padding = UDim.new(0, 5)
+local UIListLayout = screenGui:FindFirstChild("UIListLayout")
+if not UIListLayout then
+    UIListLayout = Instance.new("UIListLayout")
+    UIListLayout.Parent = screenGui
+    UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    UIListLayout.Padding = UDim.new(0, 5)
+end
 
 local function createCharacterLine(characterModel)
     local label = templateLabel:Clone()
