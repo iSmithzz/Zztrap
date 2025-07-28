@@ -40,20 +40,24 @@ toggleButton.MouseButton1Click:Connect(function()
 	end
 end)
 
--- Script Auto Train baseado no PrisonPump
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Player = game.Players.LocalPlayer
-local WorkoutHandler = ReplicatedStorage:WaitForChild("WorkoutHandler_TriggerWorkoutGain")
-local gen = require(workspace:WaitForChild("Src"):WaitForChild("C")).Gen
-
+-- Loop infinito para o Auto Train com recriação dinâmica para evitar problemas
 task.spawn(function()
 	while true do
 		if getgenv().autoTrain then
 			local success, err = pcall(function()
+				-- Recria referencias dentro do loop
+				local ReplicatedStorage = game:GetService("ReplicatedStorage")
+				local Player = game.Players.LocalPlayer
+				local WorkoutHandler = ReplicatedStorage:WaitForChild("WorkoutHandler_TriggerWorkoutGain")
+				local gen = require(workspace:WaitForChild("Src"):WaitForChild("C")).Gen
+
 				WorkoutHandler:FireServer(gen(Player))
 			end)
 			if not success then
 				warn("Erro no Auto Train:", err)
+			else
+				-- Para debug, remover depois se quiser
+				-- print("Auto Train disparado")
 			end
 		end
 		task.wait(getgenv().trainDelay)
