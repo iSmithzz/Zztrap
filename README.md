@@ -92,17 +92,18 @@ minus.MouseButton1Click:Connect(function()
 	speedLabel.Text = "Train Speed: " .. string.format("%.3f", getgenv().trainDelay)
 end)
 
--- Auto Train com coroutine reiniciável
+-- Auto Train com coroutine reiniciável usando fórmula do PrisonPump
 local trainCoroutine
 local function startAutoTrain()
 	trainCoroutine = coroutine.create(function()
 		while true do
 			if getgenv().autoTrain then
 				local success, result = pcall(function()
-					local plr = game.Players.LocalPlayer
-					local genFunc = require(workspace:WaitForChild("Src"):WaitForChild("C")).Gen
-					local data = genFunc(plr)
-					game.ReplicatedStorage:WaitForChild("WorkoutHandler_TriggerWorkoutGain"):FireServer(data)
+					local ReplicatedStorage = game:GetService("ReplicatedStorage")
+					local WorkoutHandler = ReplicatedStorage:WaitForChild("WorkoutHandler_TriggerWorkoutGain")
+					local player = game.Players.LocalPlayer
+					local gen = require(workspace:WaitForChild("Src"):WaitForChild("C")).Gen
+					WorkoutHandler:FireServer(gen(player))
 				end)
 				if not success then warn("[AutoTrain Error]:", result) end
 			end
@@ -112,7 +113,7 @@ local function startAutoTrain()
 	coroutine.resume(trainCoroutine)
 end
 
--- Monitora o toggle para reiniciar a coroutine se precisar
+-- Monitora toggle para reiniciar Auto Train coroutine
 spawn(function()
 	local lastState = getgenv().autoTrain
 	while true do
@@ -120,9 +121,6 @@ spawn(function()
 			lastState = getgenv().autoTrain
 			if lastState then
 				startAutoTrain()
-			else
-				-- Se desligar, opcionalmente pode tentar pausar coroutine
-				-- mas aqui deixamos apenas parado pelo toggle
 			end
 		end
 		task.wait(0.5)
