@@ -1,4 +1,7 @@
 local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+
 local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
 gui.Name = "FuncMonitorGui"
 
@@ -6,7 +9,7 @@ gui.Name = "FuncMonitorGui"
 local toggleBtn = Instance.new("TextButton", gui)
 toggleBtn.Size = UDim2.new(0, 110, 0, 30)
 toggleBtn.Position = UDim2.new(1, -120, 0, 10)
-toggleBtn.Text = "Iniciar Monitor"
+toggleBtn.Text = "Abrir Monitor"
 toggleBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 toggleBtn.TextColor3 = Color3.new(1,1,1)
 toggleBtn.Font = Enum.Font.SourceSansBold
@@ -60,6 +63,8 @@ logLabel.TextYAlignment = Enum.TextYAlignment.Top
 logLabel.TextWrapped = true
 logLabel.Text = ""
 
+local logText = ""
+
 local function updateLog(text)
     logLabel.Text = text
     local textSize = logLabel.TextBounds.Y
@@ -67,52 +72,42 @@ local function updateLog(text)
     scroll.CanvasSize = UDim2.new(0, 0, 0, textSize)
 end
 
-local monitoring = false
-local callCount = 0
-local maxCalls = 500  -- limite para evitar travar
-local logText = ""
-
-local function hook(event)
-    if event == "call" then
-        callCount = callCount + 1
-        local info = debug.getinfo(2, "nSl")
-        if info then
-            local name = info.name or "<anon>"
-            local src = info.short_src or "unknown"
-            local line = info.currentline or 0
-            local entry = string.format("%d: %s - %s:%d", callCount, name, src, line)
-            if #logText > 10000 then
-                logText = logText:sub(#entry + 2)
-            end
-            logText = logText .. entry .. "\n"
-            updateLog(logText)
-        end
-        if callCount >= maxCalls then
-            debug.sethook()
-            monitoring = false
-            toggleBtn.Text = "Iniciar Monitor"
-            logText = logText .. "\nLimite de chamadas atingido, monitoramento parado.\n"
-            updateLog(logText)
-        end
-    end
-end
-
-local function startMonitoring()
-    if monitoring then return end
-    callCount = 0
-    logText = ""
+local function addLog(line)
+    logText = logText .. line .. "\n"
     updateLog(logText)
-    debug.sethook(hook, "c")
-    monitoring = true
-    toggleBtn.Text = "Parar Monitor"
 end
 
-local function stopMonitoring()
-    if not monitoring then return end
-    debug.sethook()
-    monitoring = false
-    toggleBtn.Text = "Iniciar Monitor"
+-- Sobrescreve e monitora as funções do humanoid
+
+-- TakeDamage
+local originalTakeDamage = humanoid.TakeDamage
+humanoid.TakeDamage = function(self, amount)
+    addLog(string.format("TakeDamage chamado com amount = %s", tostring(amount)))
+    return originalTakeDamage(self, amount)
 end
+
+-- MoveTo
+local originalMoveTo = humanoid.MoveTo
+humanoid.MoveTo = function(self, position)
+    addLog(string.format("MoveTo chamado para posição = %s", tostring(position)))
+    return originalMoveTo(self, position)
+end
+
+-- Jump
+local originalJump = humanoid.Jump
+humanoid.Jump = false -- garante que seja bool inicialmente
+local jumpMeta = getmetatable(humanoid)
+local jumpIndex = jumpMeta.__index
+
+-- Monitorar mudança de Jump (quando pular)
+-- Como Jump é uma propriedade, vamos usar Changed
+humanoid.Changed:Connect(function(prop)
+    if prop == "Jump" and humanoid.Jump == true then
+        addLog("Jump chamado")
+    end
+end)
+
+-- Interface e botões
 
 toggleBtn.MouseButton1Click:Connect(function()
     frame.Visible = not frame.Visible
@@ -124,18 +119,9 @@ end)
 
 clearBtn.MouseButton1Click:Connect(function()
     logText = ""
-    callCount = 0
     updateLog(logText)
 end)
 
-toggleBtn.MouseButton1Click:Connect(function()
-    if monitoring then
-        stopMonitoring()
-    else
-        startMonitoring()
-    end
-end)
-
 -- Mensagem inicial
-logText = "Clique 'Iniciar Monitor' para começar.\n"
+logText = "Monitorando funções: TakeDamage, MoveTo e Jump\nAbra a janela para ver os logs.\n"
 updateLog(logText)
