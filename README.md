@@ -11,7 +11,7 @@ local gui = Instance.new("ScreenGui", game.CoreGui)
 gui.Name = "iSmithzTrain"
 
 local frame = Instance.new("Frame", gui)
-frame.Size = UDim2.new(0, 230, 0, 280)
+frame.Size = UDim2.new(0, 230, 0, 300) -- Aumentado para caber todos os botões
 frame.Position = UDim2.new(0, 100, 0, 100)
 frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 frame.BorderSizePixel = 0
@@ -142,7 +142,7 @@ task.spawn(function()
 	end
 end)
 
--- Stamina Lock 2: Setar stamina direto no personagem (exemplo genérico)
+-- Stamina Lock 2: Setar stamina direto no personagem
 task.spawn(function()
 	while true do
 		if getgenv().staminaLock2 then
