@@ -39,24 +39,38 @@ clearBtn.TextColor3 = Color3.new(1,1,1)
 clearBtn.Font = Enum.Font.SourceSansBold
 clearBtn.TextSize = 14
 
--- Caixa de texto para mostrar chamadas
-local logBox = Instance.new("TextBox", frame)
-logBox.Size = UDim2.new(1, -10, 1, -45)
-logBox.Position = UDim2.new(0, 5, 0, 40)
-logBox.MultiLine = true
-logBox.ClearTextOnFocus = false
-logBox.TextWrapped = true
-logBox.TextXAlignment = Enum.TextXAlignment.Left
-logBox.TextYAlignment = Enum.TextYAlignment.Top
-logBox.Font = Enum.Font.Code
-logBox.TextSize = 12
-logBox.BackgroundColor3 = Color3.fromRGB(10,10,10)
-logBox.TextColor3 = Color3.new(1,1,1)
-logBox.ReadOnly = true
+-- Container com barra de rolagem
+local scroll = Instance.new("ScrollingFrame", frame)
+scroll.Size = UDim2.new(1, -10, 1, -45)
+scroll.Position = UDim2.new(0, 5, 0, 40)
+scroll.BackgroundColor3 = Color3.fromRGB(10,10,10)
+scroll.BorderSizePixel = 0
+scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+scroll.ScrollBarThickness = 8
+
+local logLabel = Instance.new("TextLabel", scroll)
+logLabel.Size = UDim2.new(1, -10, 0, 0) -- altura dinâmica
+logLabel.Position = UDim2.new(0, 5, 0, 0)
+logLabel.BackgroundTransparency = 1
+logLabel.TextColor3 = Color3.new(1,1,1)
+logLabel.Font = Enum.Font.Code
+logLabel.TextSize = 12
+logLabel.TextXAlignment = Enum.TextXAlignment.Left
+logLabel.TextYAlignment = Enum.TextYAlignment.Top
+logLabel.TextWrapped = true
+logLabel.Text = ""
+
+local function updateLog(text)
+    logLabel.Text = text
+    local textSize = logLabel.TextBounds.Y
+    logLabel.Size = UDim2.new(1, -10, 0, textSize)
+    scroll.CanvasSize = UDim2.new(0, 0, 0, textSize)
+end
 
 local monitoring = false
 local callCount = 0
 local maxCalls = 500  -- limite para evitar travar
+local logText = ""
 
 local function hook(event)
     if event == "call" then
@@ -67,17 +81,18 @@ local function hook(event)
             local src = info.short_src or "unknown"
             local line = info.currentline or 0
             local entry = string.format("%d: %s - %s:%d", callCount, name, src, line)
-            -- Atualiza log (limitando tamanho)
-            if #logBox.Text > 10000 then
-                logBox.Text = logBox.Text:sub(#entry + 2)
+            if #logText > 10000 then
+                logText = logText:sub(#entry + 2)
             end
-            logBox.Text = logBox.Text .. entry .. "\n"
+            logText = logText .. entry .. "\n"
+            updateLog(logText)
         end
         if callCount >= maxCalls then
             debug.sethook()
             monitoring = false
             toggleBtn.Text = "Iniciar Monitor"
-            logBox.Text = logBox.Text .. "\nLimite de chamadas atingido, monitoramento parado.\n"
+            logText = logText .. "\nLimite de chamadas atingido, monitoramento parado.\n"
+            updateLog(logText)
         end
     end
 end
@@ -85,7 +100,8 @@ end
 local function startMonitoring()
     if monitoring then return end
     callCount = 0
-    logBox.Text = ""
+    logText = ""
+    updateLog(logText)
     debug.sethook(hook, "c")
     monitoring = true
     toggleBtn.Text = "Parar Monitor"
@@ -107,14 +123,11 @@ closeBtn.MouseButton1Click:Connect(function()
 end)
 
 clearBtn.MouseButton1Click:Connect(function()
-    logBox.Text = ""
+    logText = ""
     callCount = 0
+    updateLog(logText)
 end)
 
--- Monitorar ao clicar no botão para iniciar/parar
-logBox.Text = "Clique 'Iniciar Monitor' para começar.\n"
-
--- Botão iniciar/parar monitoramento (clicar na área do botão)
 toggleBtn.MouseButton1Click:Connect(function()
     if monitoring then
         stopMonitoring()
@@ -122,3 +135,7 @@ toggleBtn.MouseButton1Click:Connect(function()
         startMonitoring()
     end
 end)
+
+-- Mensagem inicial
+logText = "Clique 'Iniciar Monitor' para começar.\n"
+updateLog(logText)
