@@ -92,23 +92,44 @@ minus.MouseButton1Click:Connect(function()
 	speedLabel.Text = "Train Speed: " .. string.format("%.3f", getgenv().trainDelay)
 end)
 
--- Loop Auto Train (com persistência total)
-task.spawn(function()
-	while true do
-		if getgenv().autoTrain then
-			local success, result = pcall(function()
-				local plr = game.Players.LocalPlayer
-				local genFunc = require(workspace:WaitForChild("Src"):WaitForChild("C")).Gen
-				local data = genFunc(plr)
-				game.ReplicatedStorage:WaitForChild("WorkoutHandler_TriggerWorkoutGain"):FireServer(data)
-			end)
-			if not success then warn("[AutoTrain Error]:", result) end
+-- Auto Train com coroutine reiniciável
+local trainCoroutine
+local function startAutoTrain()
+	trainCoroutine = coroutine.create(function()
+		while true do
+			if getgenv().autoTrain then
+				local success, result = pcall(function()
+					local plr = game.Players.LocalPlayer
+					local genFunc = require(workspace:WaitForChild("Src"):WaitForChild("C")).Gen
+					local data = genFunc(plr)
+					game.ReplicatedStorage:WaitForChild("WorkoutHandler_TriggerWorkoutGain"):FireServer(data)
+				end)
+				if not success then warn("[AutoTrain Error]:", result) end
+			end
+			task.wait(getgenv().trainDelay)
 		end
-		task.wait(getgenv().trainDelay)
+	end)
+	coroutine.resume(trainCoroutine)
+end
+
+-- Monitora o toggle para reiniciar a coroutine se precisar
+spawn(function()
+	local lastState = getgenv().autoTrain
+	while true do
+		if getgenv().autoTrain ~= lastState then
+			lastState = getgenv().autoTrain
+			if lastState then
+				startAutoTrain()
+			else
+				-- Se desligar, opcionalmente pode tentar pausar coroutine
+				-- mas aqui deixamos apenas parado pelo toggle
+			end
+		end
+		task.wait(0.5)
 	end
 end)
 
--- Loop Auto Prestige
+-- Auto Prestige loop
 task.spawn(function()
 	while true do
 		if getgenv().autoPrestige then
@@ -120,7 +141,7 @@ task.spawn(function()
 	end
 end)
 
--- Loop Auto Food
+-- Auto Food loop
 task.spawn(function()
 	while true do
 		if getgenv().autoFood then
